@@ -43,33 +43,47 @@ const tasks = [
   //? 7. Повесить на форму событие submit, при срабатывании которой выполнить нужные действия(добавления задачи на страницу). Для этого создадим функцию обработчик события оnFormSubmitHandler. Сразу отменим поведение по дефолту для события submit. Получим значения передданные в инпутах в переменные, с помощью input.value. Сделать проверку на пустые строки в инпутах, вывести сообщения в alert в случае отправки пустой строки, останавливаем функцию.
 
   //? 8. Объявляем ноаую функцию createNewTask которая будет принимать данные от инпутов и будет создавать новый объект задачи и будет добавлять в список задач. Функцию вызовем из обработчика submit. Функция будет создавать новый объект, в которую будут переданы данные из аргументов, по умолчанию completed: false, и _id, который будет сгенерирован через Math.random. Дальше добавляем новый объект задачь в список задачь, список[новыяЗадача._id] = новыяЗадача. Для будущего использования возвращем копию нового объекта.
-  
+
   //? 9. Вызовем функцию для создания дом разметки в обработчике события формы и передадим ей наш новый объект, для генерации разметки для новой задачи. Результат присвоим в переменную.
 
   //? 10. Добавляем новую задачу с дом разметкой в список(контэйнер) listContainer, где отрисовываются все задачи, при помощи insertAdjacentElement('afterbegin', новаяЗадача)
 
   //? 11. Очищаеи форму после добавления задачи, для этого в обработчике формы вызовем метод у формы form.reset()
 
+  //? 12. Для удаления задачи, вешаем слушатель на контэйнер, который присутствует с самого начала в доме, и объявляем функцию обработчик onDeleteHandler
+
+  //? 13. В оработчике события делаем проверку, если  у кликнутого элемента есть класс delete-btn то тогда выполняем определенные действия
+
+  //? 14. В шапблоне listTanmplate для созданной лишки навешиваем атрибут дата, data-task-id со значение _id
+
+  //? 15. В обработчике удаления задачи при клике ищем ближайшего родителя с атрибутом  ('[data-task-id]'), после чего у родителя берем значение id через dataset.taskId и присваиваем в переменную id
+
+  //? 16. Создаем функцию deleteTask будет принимать id Задачи которую нужно удалить, будет спрашивать точно ли вы хотите удалить через функцию confirm и присвоить ответ в isConfirm, и эту функцию вызовем из нашего обработчика удаления задачи и передадим id
+
+  //? 17. В функции deleteTask сделаем деструктуризацию из списка задач objOfTasks[id] достанем нужную информацию, в частности title и подставим его в confirm
+
+  //? 18. Сделаем проверку если isConfirm  == false вернем isConfirm, иначе тоже вернем
+
   const objOfTasks = arrOfTasks.reduce((acc, elem) => {
     acc[elem._id] = elem;
     return acc;
   }, {});
 
-  //ELements UI
   const listContainer = document.querySelector(
     ".tasks-list-section .list-group"
   );
+
   const form = document.forms["addTask"];
-  const inputTitle = form.elements["title"];
-  const inputBody = form.elements["body"];
+  const titleInput = form.elements["title"];
+  const bodyInput = form.elements["body"];
 
-  //Events
-  renterAllTasks(objOfTasks);
-  form.addEventListener("submit", onFormSubmitHandler);
+  renderAllTasks(objOfTasks);
+  form.addEventListener("submit", оnFormSubmitHandler);
+  listContainer.addEventListener("click", onDeleteHandler);
 
-  function renterAllTasks(tasksList) {
+  function renderAllTasks(tasksList) {
     if (!tasksList) {
-      console.error("Передайте список задач!");
+      console.console.error("Передайте список задач!");
       return;
     }
     const fragment = document.createDocumentFragment();
@@ -80,7 +94,7 @@ const tasks = [
     listContainer.appendChild(fragment);
   }
 
-  function listItemTemlate({ _id, body, title } = {}) {
+  function listItemTemlate({ _id, title, body } = {}) {
     const li = document.createElement("li");
     li.classList.add(
       "list-group-item",
@@ -89,38 +103,39 @@ const tasks = [
       "flex-wrap",
       "mt-2"
     );
+    li.setAttribute("data-task-id", _id);
 
     const span = document.createElement("span");
     span.textContent = title;
     span.style.fontWeight = "bold";
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Delete";
-    deleteBtn.classList.add("btn", "btn-danger", "ml-auto", "delete-btn");
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete task";
+    deleteButton.classList.add("btn", "btn-danger", "ml-auto", "delete-btn");
 
     const article = document.createElement("p");
     article.textContent = body;
     article.classList.add("mt-2", "w-100");
 
     li.appendChild(span);
-    li.appendChild(deleteBtn);
+    li.appendChild(deleteButton);
     li.appendChild(article);
     return li;
   }
 
-  function onFormSubmitHandler(e) {
+  function оnFormSubmitHandler(e) {
     e.preventDefault();
-    const titleValue = inputTitle.value;
-    const bodyValue = inputBody.value;
 
+    const titleValue = titleInput.value;
+    const bodyValue = bodyInput.value;
     if (!titleValue || !bodyValue) {
-      alert("Пожалуйста введите title и body");
+      alert("Введите данные!");
       return;
     }
 
-    const task = createNewTask(titleValue, bodyValue);
-    const listItem = listItemTemlate(task);
-    listContainer.insertAdjacentElement("afterbegin", listItem);
+    const item = createNewTask(titleValue, bodyValue);
+    const li = listItemTemlate(item);
+    listContainer.insertAdjacentElement("afterbegin", li);
     form.reset();
   }
 
@@ -129,10 +144,31 @@ const tasks = [
       title,
       body,
       completed: false,
-      _id: `task-${Math.random()}`,
+      _id: `task-${Math.random}`,
     };
-
     objOfTasks[newTask._id] = newTask;
     return { ...newTask };
+  }
+
+  function deleteTask(id) {
+    const { title } = objOfTasks[id];
+    const isConfirm = confirm(`Точно вы хотите удалить задачу: ${title}`);
+    if (!isConfirm) return isConfirm;
+    delete objOfTasks[id];
+    return isConfirm;
+  }
+  
+  function deleteTaskFromHtml(confirmed, elem) {
+    if (!confirmed) return;
+    elem.remove();
+  }
+
+  function onDeleteHandler({ target }) {
+    if (target.classList.contains("delete-btn")) {
+      const parent = target.closest("[data-task-id]");
+      const id = parent.dataset.taskId;
+      const confirmed = deleteTask(id);
+      deleteTaskFromHtml(parent, confirmed);
+    }
   }
 })(tasks);
