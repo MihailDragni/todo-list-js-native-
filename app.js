@@ -47,6 +47,7 @@ const tasks = [
 
   form.addEventListener("submit", оnFormSubmitHandler);
   listContainer.addEventListener("click", onDeleteHandler);
+  listContainer.addEventListener("click", onCompleteHandler);
 
   renderAllTasks(objOfTasks);
   const taskListEmptyMessage = messageTemplate();
@@ -65,7 +66,7 @@ const tasks = [
     });
     listContainer.appendChild(fragment);
   }
-  function listItemTemlate({ _id, title, body } = {}) {
+  function listItemTemlate({ _id, title, body, completed } = {}) {
     const li = document.createElement("li");
     li.classList.add(
       "list-group-item",
@@ -75,6 +76,9 @@ const tasks = [
       "mt-2"
     );
     li.setAttribute("data-task-id", _id);
+    if (completed) {
+      li.style.backgroundColor = "grey";
+    }
 
     const span = document.createElement("span");
     span.style.fontWeight = "bold";
@@ -88,9 +92,16 @@ const tasks = [
     article.textContent = body;
     article.classList.add("mt-2", "w-100");
 
+    const copletedBtn = document.createElement("button");
+    copletedBtn.textContent = "Completed";
+    copletedBtn.style.backgroundColor = "green";
+    copletedBtn.style.color = "white";
+    copletedBtn.classList.add("btn", "completed-btn");
+
     li.appendChild(span);
     li.appendChild(deleteButton);
     li.appendChild(article);
+    li.appendChild(copletedBtn);
     return li;
   }
   function оnFormSubmitHandler(e) {
@@ -113,7 +124,7 @@ const tasks = [
     const newTask = {
       title,
       body,
-      computed: false,
+      completed: false,
       _id: `task- ${Math.random()}`,
     };
 
@@ -154,5 +165,18 @@ const tasks = [
     } else {
       taskListEmptyMessage.style.display = "none";
     }
+  }
+  function changeComletedProp(id) {
+    objOfTasks[id].completed = true;
+  }
+  function changeColorOnCompleted(elem) {
+    elem.style.backgroundColor = "grey";
+  }
+  function onCompleteHandler({ target }) {
+    if (target.classList.contains("complited-btn"));
+    const parent = target.closest("[data-task-id]");
+    const id = parent.getAttribute("data-task-id");
+    changeComletedProp(id);
+    changeColorOnCompleted(parent);
   }
 })(tasks);
