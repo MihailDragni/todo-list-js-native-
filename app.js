@@ -28,72 +28,43 @@ const tasks = [
 ];
 
 (function (arrOfTasks) {
-  //? 1.Переводим массив задач, в объект объектов(где id это ключь), для того что бы было удобнне работать.
-
-  //? 2.Создаем функцию для вывода задачь на экран(renderAllTasks). ПРоверяем передан ли список задачь. Создадим фрагмент, который наполним задачами, после добавим фрагмент на экран. Перебираем задачи через Object.values и создаем для каждой задачи дом разметку. На каждой итерации вызываем функцию для зоздания разметки и передаем ее переменной.
-
-  //? 3. Объявляем отдельную функцию (listItemTemlate) для создания одного дом элемента. Разметку для одной задачи! Функция получает одну задачу, то есть один объект(в аргументах можно деструктруировать необходимые данные в переменные)
-
-  //? 4. После получения разметки нам нужно добавить их во фрагмент.
-
-  //? 5. Найти список(контэйнер) куда будут добовляться задачи. После чего добавить в него наш фрагмент.
-
-  //? 6. Для ввода и добавления задачь на страницу, нам нужно для начала найти форму и его инпуты. Ищем форму через document.forms['name']. В нем хранится коллекция всех форм. Дальше находим инпуты через form.elements['name'](можно искать по name или по id)
-
-  //? 7. Повесить на форму событие submit, при срабатывании которой выполнить нужные действия(добавления задачи на страницу). Для этого создадим функцию обработчик события оnFormSubmitHandler. Сразу отменим поведение по дефолту для события submit. Получим значения передданные в инпутах в переменные, с помощью input.value. Сделать проверку на пустые строки в инпутах, вывести сообщения в alert в случае отправки пустой строки, останавливаем функцию.
-
-  //? 8. Объявляем ноаую функцию createNewTask которая будет принимать данные от инпутов и будет создавать новый объект задачи и будет добавлять в список задач. Функцию вызовем из обработчика submit. Функция будет создавать новый объект, в которую будут переданы данные из аргументов, по умолчанию completed: false, и _id, который будет сгенерирован через Math.random. Дальше добавляем новый объект задачь в список задачь, список[новыяЗадача._id] = новыяЗадача. Для будущего использования возвращем копию нового объекта.
-
-  //? 9. Вызовем функцию для создания дом разметки в обработчике события формы и передадим ей наш новый объект, для генерации разметки для новой задачи. Результат присвоим в переменную.
-
-  //? 10. Добавляем новую задачу с дом разметкой в список(контэйнер) listContainer, где отрисовываются все задачи, при помощи insertAdjacentElement('afterbegin', новаяЗадача)
-
-  //? 11. Очищаеи форму после добавления задачи, для этого в обработчике формы вызовем метод у формы form.reset()
-
-  //? 12. Для удаления задачи, вешаем слушатель на контэйнер, который присутствует с самого начала в доме, и объявляем функцию обработчик onDeleteHandler
-
-  //? 13. В оработчике события делаем проверку, если  у кликнутого элемента есть класс delete-btn то тогда выполняем определенные действия
-
-  //? 14. В шапблоне listTanmplate для созданной лишки навешиваем атрибут дата, data-task-id со значение _id
-
-  //? 15. В обработчике удаления задачи при клике ищем ближайшего родителя с атрибутом  ('[data-task-id]'), после чего у родителя берем значение id через dataset.taskId и присваиваем в переменную id
-
-  //? 16. Создаем функцию deleteTask будет принимать id Задачи которую нужно удалить, будет спрашивать точно ли вы хотите удалить через функцию confirm и присвоить ответ в isConfirm, и эту функцию вызовем из нашего обработчика удаления задачи и передадим id
-
-  //? 17. В функции deleteTask сделаем деструктуризацию из списка задач objOfTasks[id] достанем нужную информацию, в частности title и подставим его в confirm
-
-  //? 18. Сделаем проверку если isConfirm  == false вернем isConfirm, иначе тоже вернем
-
-  const objOfTasks = arrOfTasks.reduce((acc, elem) => {
-    acc[elem._id] = elem;
+  const objOfTasks = arrOfTasks.reduce((acc, task) => {
+    acc[task._id] = task;
     return acc;
   }, {});
+
+  //? Elements UI
 
   const listContainer = document.querySelector(
     ".tasks-list-section .list-group"
   );
-
+  const card = document.querySelector(".form-section .card");
   const form = document.forms["addTask"];
   const titleInput = form.elements["title"];
   const bodyInput = form.elements["body"];
 
-  renderAllTasks(objOfTasks);
+  //? Events
+
   form.addEventListener("submit", оnFormSubmitHandler);
   listContainer.addEventListener("click", onDeleteHandler);
 
+  renderAllTasks(objOfTasks);
+  const taskListEmptyMessage = messageTemplate();
+  onTasksListEpty(arrOfTasks);
+
   function renderAllTasks(tasksList) {
     if (!tasksList) {
-      console.console.error("Передайте список задач!");
+      console.log("Список пуст!");
       return;
     }
+
     const fragment = document.createDocumentFragment();
-    Object.values(tasksList).forEach((elem) => {
-      const li = listItemTemlate(elem);
+    Object.values(tasksList).forEach((task) => {
+      const li = listItemTemlate(task);
       fragment.appendChild(li);
     });
     listContainer.appendChild(fragment);
   }
-
   function listItemTemlate({ _id, title, body } = {}) {
     const li = document.createElement("li");
     li.classList.add(
@@ -106,8 +77,8 @@ const tasks = [
     li.setAttribute("data-task-id", _id);
 
     const span = document.createElement("span");
-    span.textContent = title;
     span.style.fontWeight = "bold";
+    span.textContent = title;
 
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete task";
@@ -122,53 +93,66 @@ const tasks = [
     li.appendChild(article);
     return li;
   }
-
   function оnFormSubmitHandler(e) {
     e.preventDefault();
-
     const titleValue = titleInput.value;
     const bodyValue = bodyInput.value;
+
     if (!titleValue || !bodyValue) {
-      alert("Введите данные!");
+      alert("Введите данные задачи!");
       return;
     }
 
-    const item = createNewTask(titleValue, bodyValue);
-    const li = listItemTemlate(item);
-    listContainer.insertAdjacentElement("afterbegin", li);
+    const task = createNewTask(titleValue, bodyValue);
+    const taskItem = listItemTemlate(task);
+    listContainer.insertAdjacentElement("afterbegin", taskItem);
     form.reset();
+    onTasksListEpty(objOfTasks);
   }
-
   function createNewTask(title, body) {
     const newTask = {
       title,
       body,
-      completed: false,
-      _id: `task-${Math.random}`,
+      computed: false,
+      _id: `task- ${Math.random()}`,
     };
+
     objOfTasks[newTask._id] = newTask;
     return { ...newTask };
   }
-
   function deleteTask(id) {
     const { title } = objOfTasks[id];
-    const isConfirm = confirm(`Точно вы хотите удалить задачу: ${title}`);
+    const isConfirm = confirm(`Точно хотите удалить задачу: ${title}`);
     if (!isConfirm) return isConfirm;
     delete objOfTasks[id];
     return isConfirm;
   }
-  
   function deleteTaskFromHtml(confirmed, elem) {
     if (!confirmed) return;
     elem.remove();
   }
-
   function onDeleteHandler({ target }) {
     if (target.classList.contains("delete-btn")) {
       const parent = target.closest("[data-task-id]");
-      const id = parent.dataset.taskId;
+      const id = parent.getAttribute("data-task-id");
       const confirmed = deleteTask(id);
-      deleteTaskFromHtml(parent, confirmed);
+      deleteTaskFromHtml(confirmed, parent);
+      onTasksListEpty(objOfTasks);
+    }
+  }
+  function messageTemplate() {
+    const paragraph = document.createElement("p");
+    paragraph.style.fontWeight = "500";
+    paragraph.classList.add("paragraph");
+    paragraph.textContent = "Cписок пуст, добавьте новую задачу...";
+    card.insertAdjacentElement("afterend", paragraph);
+    return paragraph;
+  }
+  function onTasksListEpty(tasksList) {
+    if (Object.values(tasksList).length === 0 || tasksList.length === 0) {
+      taskListEmptyMessage.style.display = "block";
+    } else {
+      taskListEmptyMessage.style.display = "none";
     }
   }
 })(tasks);
